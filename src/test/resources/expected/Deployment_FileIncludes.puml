@@ -1,14 +1,14 @@
-@startuml(id=Deployment)
-!includeurl https://raw.githubusercontent.com/awslabs/aws-icons-for-plantuml/v11.1/dist/AWSCommon.puml
-!includeurl https://raw.githubusercontent.com/plantuml-stdlib/gilbarbara-plantuml-sprites/master/sprites/apple.puml
-!includeurl https://raw.githubusercontent.com/awslabs/aws-icons-for-plantuml/v11.1/dist/GroupIcons/Cloudalt.puml
-!includeurl https://raw.githubusercontent.com/awslabs/aws-icons-for-plantuml/v11.1/dist/Containers/EKSCloud.puml
-!includeurl https://raw.githubusercontent.com/plantuml-stdlib/gilbarbara-plantuml-sprites/master/sprites/docker-icon.puml
-!includeurl https://raw.githubusercontent.com/plantuml-stdlib/gilbarbara-plantuml-sprites/master/sprites/kafka.puml
-!includeurl https://raw.githubusercontent.com/plantuml-stdlib/gilbarbara-plantuml-sprites/master/sprites/nginx.puml
-!includeurl https://raw.githubusercontent.com/plantuml-stdlib/gilbarbara-plantuml-sprites/master/sprites/postgresql.puml
-!includeurl https://raw.githubusercontent.com/plantuml-stdlib/gilbarbara-plantuml-sprites/master/sprites/spring.puml
-!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Deployment.puml
+@startuml(id=Deployment_FileIncludes)
+!include <awslib/AWSCommon>
+!include <awslib/Containers/EKSCloud>
+!include <awslib/GroupIcons/Cloudalt>
+!include <logos/apple.puml>
+!include <logos/docker-icon.puml>
+!include <logos/kafka.puml>
+!include <logos/nginx.puml>
+!include <logos/postgresql.puml>
+!include <logos/spring.puml>
+!include <C4/C4_Deployment>
 title System container - Deployment - Default
 caption A deployment diagram showing the environment.
 

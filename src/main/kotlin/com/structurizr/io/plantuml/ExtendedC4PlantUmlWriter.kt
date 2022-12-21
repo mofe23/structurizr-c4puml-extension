@@ -5,14 +5,13 @@ import com.github.chriskn.structurizrextension.model.c4Type
 import com.github.chriskn.structurizrextension.model.icon
 import com.github.chriskn.structurizrextension.model.link
 import com.github.chriskn.structurizrextension.model.location
-import com.github.chriskn.structurizrextension.plantuml.AWS_ICON_COMMONS
-import com.github.chriskn.structurizrextension.plantuml.AWS_ICON_URL
 import com.github.chriskn.structurizrextension.plantuml.C4PlantUmlLayout
 import com.github.chriskn.structurizrextension.plantuml.DependencyConfiguration
 import com.github.chriskn.structurizrextension.plantuml.Direction
 import com.github.chriskn.structurizrextension.plantuml.IconRegistry
 import com.github.chriskn.structurizrextension.plantuml.Legend
 import com.github.chriskn.structurizrextension.plantuml.Mode
+import com.github.chriskn.structurizrextension.plantuml.includes.AbstractIncludeHandler
 import com.github.chriskn.structurizrextension.view.LayoutRegistry
 import com.structurizr.model.Component
 import com.structurizr.model.Container
@@ -33,16 +32,13 @@ import com.structurizr.view.ContainerView
 import com.structurizr.view.DeploymentView
 import com.structurizr.view.DynamicView
 import com.structurizr.view.RelationshipView
-import com.structurizr.view.SystemContextView
-import com.structurizr.view.SystemLandscapeView
 import com.structurizr.view.View
 import java.io.Writer
-import java.net.URI
-
-private const val C4_PLANT_UML_STDLIB_URL = "https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master"
 
 @Suppress("TooManyFunctions")
-class ExtendedC4PlantUmlWriter : C4PlantUMLWriter() {
+class ExtendedC4PlantUmlWriter(
+    private val includeHandler: AbstractIncludeHandler
+) : C4PlantUMLWriter() {
 
     companion object {
         private const val ASYNC_REL_TAG_NAME = "async relationship"
@@ -50,19 +46,10 @@ class ExtendedC4PlantUmlWriter : C4PlantUMLWriter() {
 
     private val separator = System.lineSeparator()
 
-    private val c4IncludeForView = mapOf(
-        DynamicView::class.java to "C4_Dynamic.puml",
-        DeploymentView::class.java to "C4_Deployment.puml",
-        ComponentView::class.java to "C4_Component.puml",
-        ContainerView::class.java to "C4_Container.puml",
-        SystemLandscapeView::class.java to "C4_Context.puml",
-        SystemContextView::class.java to "C4_Context.puml"
-    )
-
     override fun writeHeader(view: View, writer: Writer) {
         includes.clear()
         clearSkinParams()
-        addIncludeUrls(view)
+        includeHandler.addIncludes(view, this)
         super.writeHeader(view, writer)
         val layout = LayoutRegistry.layoutForKey(view.key)
         if (layout.showPersonOutline) {
@@ -74,41 +61,6 @@ class ExtendedC4PlantUmlWriter : C4PlantUMLWriter() {
         if (view.relationships.any { it.relationship.interactionStyle == InteractionStyle.Asynchronous }) {
             writeAsyncRelTag(writer)
         }
-    }
-
-    private fun addIncludeUrls(view: View) {
-        val elements: MutableSet<ModelItem> = view.elements.map { it.element }.toMutableSet()
-        if (view is DeploymentView) {
-            val children = elements
-                .filterIsInstance<DeploymentNode>()
-                .flatMap { collectElements(it, elements) }
-            elements.addAll(children)
-        }
-        elements += view.relationships.map { it.relationship }
-        val spriteIncludesForElements = elements
-            .asSequence()
-            .mapNotNull { it.icon?.let { technology -> IconRegistry.iconUrlFor(technology) } }
-            .toSet()
-            .toList()
-            .sorted()
-            .toMutableList()
-        if (spriteIncludesForElements.any { it.startsWith(AWS_ICON_URL) }) {
-            spriteIncludesForElements.add(0, AWS_ICON_COMMONS)
-        }
-        spriteIncludesForElements.forEach { addIncludeURL(URI(it)) }
-        val c4PumlIncludeURI = URI("$C4_PLANT_UML_STDLIB_URL/${c4IncludeForView[view.javaClass]}")
-        addIncludeURL(c4PumlIncludeURI)
-    }
-
-    private fun collectElements(
-        deploymentNode: DeploymentNode,
-        elements: MutableSet<ModelItem>
-    ): MutableSet<ModelItem> {
-        elements.addAll(deploymentNode.infrastructureNodes)
-        elements.addAll(deploymentNode.softwareSystemInstances.map { it.softwareSystem })
-        elements.addAll(deploymentNode.containerInstances.map { it.container })
-        deploymentNode.children.forEach { collectElements(it, elements) }
-        return elements
     }
 
     override fun write(view: View, element: Element, writer: Writer, indent: Int) {
